@@ -1,0 +1,18 @@
+name: call subfoldersync-vibe
+
+on:
+    push:
+    schedule:
+        - cron: '0 10 * * *'
+    workflow_dispatch:
+
+permissions:
+    contents: write
+
+jobs:
+    call-subfoldersync-vibe:
+        uses: IMOitself/subfoldersync-vibe/.github/workflows/start.yml@master
+        with:
+            username: ${{ github.actor }}
+        secrets:
+            gh_pat: ${{ secrets.GITHUB_TOKEN }}

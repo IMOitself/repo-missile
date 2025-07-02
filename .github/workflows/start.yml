@@ -1,0 +1,45 @@
+name: start subfoldersync-vibe
+
+on:
+  workflow_call:
+    inputs:
+        username:
+            required: true
+            type: string
+    secrets:
+        gh_pat:
+            required: true
+
+jobs:
+    update-readme:
+        runs-on: ubuntu-latest
+        permissions:
+            contents: write
+        
+        steps:
+            - name: checkout caller's repo
+              uses: actions/checkout@v4
+        
+            - name: clone subfoldersync-vibe repo
+              run: |
+                git clone https://github.com/IMOitself/subfoldersync-vibe.git
+                pwd
+                ls subfoldersync-vibe
+
+            - name: run sync-subfolders.sh
+              env:
+                USERNAME: ${{ inputs.username }}
+                GH_PAT: ${{ secrets.gh_pat }}
+              run: |
+                cd subfoldersync-vibe
+                chmod +x sync-subfolders.sh
+                ./sync-subfolders.sh
+            
+            - name: remove subfoldersync-vibe repo
+              run: |
+                rm -rf subfoldersync-vibe
+            
+            - name: commit changes
+              uses: stefanzweifel/git-auto-commit-action@v5
+              with:
+                commit_message: "chore: sync subfolders"
