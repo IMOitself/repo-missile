@@ -28,8 +28,6 @@ jobs:
     sync:
         runs-on: ubuntu-latest
         steps:
-            
-
             - name: Clone subfoldersync-vibe repo
               uses: actions/checkout@v4
               with:
@@ -41,6 +39,7 @@ jobs:
               with:
                 repository: ${{ inputs.destination_repo }}
                 path: dest_repo
+                token: ${{ secrets.gh_pat }}
 
             - name: Run sync script
               working-directory: dest_repo
@@ -52,7 +51,10 @@ jobs:
                 ../subfoldersync-vibe/sync-subfolders.sh
 
             - name: Commit changes
-              uses: stefanzweifel/git-auto-commit-action@v6
+              uses: stefanzweifel/git-auto-commit-action@v5
               with:
                 repository: dest_repo
                 commit_message: "chore: sync subfolder from ${{ inputs.source_repo }}"
+                commit_user_name: ${{ inputs.username }}
+                commit_user_email: ${{ inputs.username }}@users.noreply.github.com
+                branch: main # or your default branch
