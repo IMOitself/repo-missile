@@ -5,8 +5,8 @@ set -e
 SOURCE_REPO_DIR=$(mktemp -d)
 
 # 2. Clone the source repo
-echo "Cloning $SOURCE_REPO..."
-git clone --no-local --single-branch "https://github.com/$SOURCE_REPO.git" "$SOURCE_REPO_DIR"
+echo "Cloning $SOURCE_REPO on branch $SOURCE_BRANCH..."
+git clone --no-local --branch "$SOURCE_BRANCH" --single-branch "https://github.com/$SOURCE_REPO.git" "$SOURCE_REPO_DIR"
 
 # 3. In the source repo, create a branch with only the subfolder history
 echo "Creating branch with subfolder history..."

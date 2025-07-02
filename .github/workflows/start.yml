@@ -7,8 +7,16 @@ on:
             description: 'The repository to sync from, e.g., IMOitself/A'
             required: true
             type: string
+        source_branch:
+            description: 'The branch to sync from'
+            required: true
+            type: string
         destination_repo:
             description: 'The repository to sync to, e.g., IMOitself/B'
+            required: true
+            type: string
+        destination_branch:
+            description: 'The branch to sync to'
             required: true
             type: string
         subfolder_path:
@@ -33,6 +41,7 @@ jobs:
               with:
                 repository: 'IMOitself/subfoldersync-vibe'
                 path: subfoldersync-vibe
+                token: ${{ secrets.gh_pat }}
 
             - name: Checkout Destination Repo
               uses: actions/checkout@v4
@@ -40,11 +49,13 @@ jobs:
                 repository: ${{ inputs.destination_repo }}
                 path: dest_repo
                 token: ${{ secrets.gh_pat }}
+                ref: ${{ inputs.destination_branch }}
 
             - name: Run sync script
               working-directory: dest_repo
               env:
                 SOURCE_REPO: ${{ inputs.source_repo }}
+                SOURCE_BRANCH: ${{ inputs.source_branch }}
                 SUBFOLDER_PATH: ${{ inputs.subfolder_path }}
               run: |
                 chmod +x ../subfoldersync-vibe/sync-subfolders.sh
@@ -57,4 +68,4 @@ jobs:
                 commit_message: "chore: sync subfolder from ${{ inputs.source_repo }}"
                 commit_user_name: ${{ inputs.username }}
                 commit_user_email: ${{ inputs.username }}@users.noreply.github.com
-                branch: main # or your default branch
+                branch: ${{ inputs.destination_branch }}
