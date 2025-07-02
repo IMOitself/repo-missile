@@ -37,13 +37,23 @@ jobs:
                 repository: 'IMOitself/subfoldersync-vibe'
                 path: subfoldersync-vibe
 
+            - name: Checkout Destination Repo
+              uses: actions/checkout@v4
+              with:
+                repository: ${{ inputs.destination_repo }}
+                path: dest_repo
+
             - name: Run sync script
+              working-directory: dest_repo
               env:
                 SOURCE_REPO: ${{ inputs.source_repo }}
-                DEST_REPO: ${{ inputs.destination_repo }}
                 SUBFOLDER_PATH: ${{ inputs.subfolder_path }}
-                USERNAME: ${{ inputs.username }}
-                GH_PAT: ${{ secrets.gh_pat }}
               run: |
-                chmod +x subfoldersync-vibe/sync-subfolders.sh
-                subfoldersync-vibe/sync-subfolders.sh
+                chmod +x ../subfoldersync-vibe/sync-subfolders.sh
+                ../subfoldersync-vibe/sync-subfolders.sh
+
+            - name: Commit changes
+              uses: stefanzweifel/git-auto-commit-action@v6
+              with:
+                repository: dest_repo
+                commit_message: "chore: sync subfolder from ${{ inputs.source_repo }}"
