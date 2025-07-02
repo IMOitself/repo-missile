@@ -28,8 +28,7 @@ jobs:
     sync:
         runs-on: ubuntu-latest
         steps:
-            - name: Install git-filter-repo
-              run: pip install git-filter-repo
+            
 
             - name: Clone subfoldersync-vibe repo
               uses: actions/checkout@v4
