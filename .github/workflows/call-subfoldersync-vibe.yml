@@ -13,6 +13,9 @@ jobs:
     call-subfoldersync-vibe:
         uses: IMOitself/subfoldersync-vibe/.github/workflows/start.yml@master
         with:
+            source_repo: 'IMOitself/A'
+            destination_repo: 'IMOitself/B'
+            subfolder_path: 'path/to/your/subfolder'
             username: ${{ github.actor }}
         secrets:
             gh_pat: ${{ secrets.GITHUB_TOKEN }}
