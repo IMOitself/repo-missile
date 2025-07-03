@@ -75,8 +75,7 @@ Then make the token available to the GitHub Action following the steps:
     jobs:
       push_subfolder_to_repo_b:
         runs-on: ubuntu-latest
-        if: github.actor != 'github-actions[bot]'
-
+        
         steps:
           - name: Checkout Repository A
             uses: actions/checkout@v4
