@@ -81,7 +81,7 @@ Then make the token available to the GitHub Action following the steps:
             uses: actions/checkout@v4
 
           - name: Push 'this/is/subfolder' to Repository B
-            uses: IMOitself/repo-missile@0.1
+            uses: IMOitself/repo-missile@0.2
             env:
               API_TOKEN_GITHUB: ${{ secrets.GH_PAT }}
             with:
