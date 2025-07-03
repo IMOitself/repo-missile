@@ -4,7 +4,7 @@ A fork of [cpina/github-action-push-to-another-repository](https://github.com/cp
 > [!NOTE]
 > uses code from [danmindru's](https://github.com/danmindru/push-files-to-another-repository) <br>
 > which is a fork of [nkoppel's](https://github.com/nkoppel/push-files-to-another-repository) <br>
-> which is a fork of [cpina/github-action-push-to-another-repository](https://github.com/cpina/github-action-push-to-another-repository) 
+> which is a fork of [cpina's](https://github.com/cpina/github-action-push-to-another-repository) 
 
 ## TODO
 - [ ] refactor entrypoint.sh
@@ -60,8 +60,9 @@ Then make the token available to the GitHub Action following the steps:
 * Click on "New Repository Secrets", name it "API_TOKEN_GITHUB", and paste your token.
 
 ## Example usage
-- [IMOaswell/A](https://github.com/IMOaswell/A) and [IMOaswell/B](https://github.com/IMOaswell/B)
-```yaml
+- Example Repositories: [IMOaswell/A](https://github.com/IMOaswell/A) and [IMOaswell/B](https://github.com/IMOaswell/B)
+- Example workflow file:
+- ```yaml
     name: Sync Subfolder to Repo B
 
     on:
