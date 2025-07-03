@@ -90,4 +90,4 @@ Then make the token available to the GitHub Action following the steps:
               destination-repository: 'B'
               destination-directory: 'this/is/subfolder'
               commit-email: 'IMOaswell@users.noreply.github.com'
-```
+  ```
