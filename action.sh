@@ -39,12 +39,7 @@ echo "Cloning source and target repositories..."
 git clone "https://$API_TOKEN_GITHUB@github.com/$GITHUB_REPOSITORY.git" source-repo
 git clone --single-branch --branch "$DESTINATION_BRANCH" "https://$API_TOKEN_GITHUB@github.com/$DESTINATION_USERNAME/$DESTINATION_REPOSITORY.git" target-repo
 
-pwd
-ls -a
-
 cd source-repo
-pwd
-ls -a
 
 action_type=""
 
@@ -64,9 +59,7 @@ if [ ! -f "$HASH_FILE_PATH" ]; then
     action_type="INIT"
 fi
 
-cd target-repo
-pwd
-ls -a
+cd ../target-repo
 
 if [ ! -f "$HASH_FILE_PATH" ]; then
     echo "tracking file not found. probably because this is the first time running this action."
