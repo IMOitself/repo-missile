@@ -49,6 +49,8 @@ if [ ! -f "$HASH_FILE_PATH" ]; then
     echo "doing initial setup..."
 
     LATEST_SOURCE_HASH=$(git rev-parse HEAD)
+
+    mkdir -p "$(dirname "$HASH_FILE_PATH")"
     echo "$LATEST_SOURCE_HASH" > "$HASH_FILE_PATH"
 
     git add "$HASH_FILE_PATH"
@@ -65,10 +67,12 @@ if [ ! -f "$HASH_FILE_PATH" ]; then
     echo "probably because this is the first time running this action."
     echo "doing initial setup..."
 
-    LATEST_TARGET_HASH=$(git rev-parse HEAD)
-    echo "$LATEST_TARGET_HASH" > "$HASH_FILE_PATH"
-
     git checkout -B "$SYNC_BRANCH"
+
+    LATEST_TARGET_HASH=$(git rev-parse HEAD)
+
+    mkdir -p "$(dirname "$HASH_FILE_PATH")"
+    echo "$LATEST_TARGET_HASH" > "$HASH_FILE_PATH"
 
     git add "$HASH_FILE_PATH"
     git commit -m "repo-missile: initialize tracking file"
