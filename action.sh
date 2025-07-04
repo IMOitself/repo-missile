@@ -39,53 +39,42 @@ echo "Cloning source and target repositories..."
 git clone "https://$API_TOKEN_GITHUB@github.com/$GITHUB_REPOSITORY.git" source-repo
 git clone --single-branch --branch "$DESTINATION_BRANCH" "https://$API_TOKEN_GITHUB@github.com/$DESTINATION_USERNAME/$DESTINATION_REPOSITORY.git" target-repo
 
-pwd
-ls -a
+initialize_repo_missile_if_needed() {
+    local repo_dir="$1"
 
-cd source-repo
-pwd
-ls -a
+    (
+    set -e
+    cd "$repo_dir"
 
-action_type=""
+    if [ ! -f "$HASH_FILE_PATH" ]; then
+      echo "--- $repo_dir has no tracking file."
+      echo "--- probably because this is the first time running this action."
+      echo "--- Initializing tracking for $repo_dir ---"
 
-if [ ! -f "$HASH_FILE_PATH" ]; then
-    echo "tracking file not found. probably because this is the first time running this action."
-    echo "doing initial setup..."
+      mkdir -p "$(dirname "$HASH_FILE_PATH")"
+      git rev-parse HEAD > "$HASH_FILE_PATH"
 
-    LATEST_SOURCE_HASH=$(git rev-parse HEAD)
+      git add "$HASH_FILE_PATH"
+      git commit -m "repo-missile: initialize tracking file"
+      git push
+      return 0
+    fi
+    return 1
+    )
+}
 
-    mkdir -p "$(dirname "$HASH_FILE_PATH")"
-    echo "$LATEST_SOURCE_HASH" > "$HASH_FILE_PATH"
 
-    git add "$HASH_FILE_PATH"
-    git commit -m "repo-missile: initialize tracking file"
-    git push
+init_occurred=false
 
-    action_type="INIT"
+if initialize_repo_missile_if_needed "source-repo"; then
+  init_occurred=true
 fi
 
-cd target-repo
-pwd
-ls -a
-
-if [ ! -f "$HASH_FILE_PATH" ]; then
-    echo "tracking file not found. probably because this is the first time running this action."
-    echo "doing initial setup..."
-
-    git checkout -B "$SYNC_BRANCH"
-
-    LATEST_TARGET_HASH=$(git rev-parse HEAD)
-
-    mkdir -p "$(dirname "$HASH_FILE_PATH")"
-    echo "$LATEST_TARGET_HASH" > "$HASH_FILE_PATH"
-
-    git add "$HASH_FILE_PATH"
-    git commit -m "repo-missile: initialize tracking file"
-    git push --force --set-upstream origin "$SYNC_BRANCH"
-    action_type="INIT"
+if initialize_repo_missile_if_needed "target-repo"; then
+  init_occurred=true
 fi
 
-if [ "$action_type" = "INIT" ]; then
-    echo "--- INITIAL SETUP COMPLETED ---"
-    exit 0
+if [ "$init_occurred" = true ]; then
+  echo "--- INITIAL SETUP COMPLETED ---"
+  exit 0
 fi
