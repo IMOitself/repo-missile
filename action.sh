@@ -47,8 +47,14 @@ if [ ! -f "$HASH_FILE_PATH" ]; then
     echo "tracking file not found at '$HASH_FILE_PATH' of this repo."
     echo "probably because this is the first time running this action."
     echo "doing initial setup..."
+
     LATEST_SOURCE_HASH=$(git rev-parse HEAD)
     echo "$LATEST_SOURCE_HASH" > "$HASH_FILE_PATH"
+
+    git add "$HASH_FILE_PATH"
+    git commit -m "repo-missile: initialize tracking file"
+    git push
+
     action_type="INIT"
 fi
 
@@ -58,8 +64,15 @@ if [ ! -f "$HASH_FILE_PATH" ]; then
     echo "tracking file not found at '$HASH_FILE_PATH' of destination repo."
     echo "probably because this is the first time running this action."
     echo "doing initial setup..."
+
     LATEST_TARGET_HASH=$(git rev-parse HEAD)
     echo "$LATEST_TARGET_HASH" > "$HASH_FILE_PATH"
+
+    git checkout -B "$SYNC_BRANCH"
+
+    git add "$HASH_FILE_PATH"
+    git commit -m "repo-missile: initialize tracking file"
+    git push --force --set-upstream origin "$SYNC_BRANCH"
     action_type="INIT"
 fi
 
