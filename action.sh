@@ -39,13 +39,17 @@ echo "Cloning source and target repositories..."
 git clone "https://$API_TOKEN_GITHUB@github.com/$GITHUB_REPOSITORY.git" source-repo
 git clone --single-branch --branch "$DESTINATION_BRANCH" "https://$API_TOKEN_GITHUB@github.com/$DESTINATION_USERNAME/$DESTINATION_REPOSITORY.git" target-repo
 
+pwd
+ls -a
+
 cd source-repo
+pwd
+ls -a
 
 action_type=""
 
 if [ ! -f "$HASH_FILE_PATH" ]; then
-    echo "tracking file not found at '$HASH_FILE_PATH' of this repo."
-    echo "probably because this is the first time running this action."
+    echo "tracking file not found. probably because this is the first time running this action."
     echo "doing initial setup..."
 
     LATEST_SOURCE_HASH=$(git rev-parse HEAD)
@@ -61,10 +65,11 @@ if [ ! -f "$HASH_FILE_PATH" ]; then
 fi
 
 cd target-repo
+pwd
+ls -a
 
 if [ ! -f "$HASH_FILE_PATH" ]; then
-    echo "tracking file not found at '$HASH_FILE_PATH' of destination repo."
-    echo "probably because this is the first time running this action."
+    echo "tracking file not found. probably because this is the first time running this action."
     echo "doing initial setup..."
 
     git checkout -B "$SYNC_BRANCH"
