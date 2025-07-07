@@ -70,9 +70,9 @@ initialize_repo_missile_if_needed() {
 
 init_occurred=false
 
-REPOS=( "source-repo" "target-repo" )
+REPOS="source-repo target-repo"
 
-for repo in "${REPOS[@]}"; do
+for repo in $REPOS; do
   if initialize_repo_missile_if_needed "$repo"; then
     init_occurred=true
   fi
