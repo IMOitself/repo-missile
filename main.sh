@@ -10,7 +10,7 @@ setup_folders() {
     cd "$F" || exit
 
     mkdir -p "subfolder"
-    echo "$(date)" > hello.txt
+    echo "fixed text right here :D" > hello.txt
 
     git config --global --add safe.directory "$(pwd)"
     git init .
@@ -23,11 +23,49 @@ setup_folders() {
     git add .
     git commit -m "initial commit"
 
-    # remove .git for repo-missile to not consider this directory as a submodule
-    rm -rf .git
-
     cd ..
 }
 
 setup_folders $A
 setup_folders $B
+
+initialize_sync_on_repo_if_needed(){
+    repo_folder="$1"
+    repo_name="$2"
+
+    (
+    cd "$repo_folder" || exit
+    pwd
+
+    last_sync_commit_hash=$(git log --grep="#repo-missile" -1 --pretty=format:%H)
+    if [ -z "$last_sync_commit_hash" ]; then
+        echo ""
+        echo "last sync commit not found."
+        echo "probably because it is not initialized yet."
+        echo ""
+
+        m="#repo-missile initial sync" 
+        git commit --allow-empty -m "$m" -m "made in $repo_name"
+        git log --oneline
+    fi
+    )
+}
+
+push(){
+    source_repo_folder="$1"
+    target_repo_folder="$2"
+
+    source_repo_name="IMOaswell/A"
+    initialize_sync_on_repo_if_needed "$source_repo_folder" "$source_repo_name"
+    initialize_sync_on_repo_if_needed "$target_repo_folder" "$source_repo_name"
+}
+
+push $A $B
+
+
+
+
+# remove .git for repo-missile to not consider this directory as a submodule
+cd $A && rm -rf .git
+cd ..
+cd $B && rm -rf .git
