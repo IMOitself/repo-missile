@@ -66,13 +66,13 @@ initialize_repo_missile_if_needed() {
 
 init_occurred=false
 
-if initialize_repo_missile_if_needed "source-repo"; then
-  init_occurred=true
-fi
+REPOS=( "source-repo" "target-repo" )
 
-if initialize_repo_missile_if_needed "target-repo"; then
-  init_occurred=true
-fi
+for repo in "${REPOS[@]}"; do
+  if initialize_repo_missile_if_needed "$repo"; then
+    init_occurred=true
+  fi
+done
 
 if [ "$init_occurred" = true ]; then
   echo "--- INITIAL SETUP COMPLETED ---"
