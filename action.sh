@@ -46,6 +46,10 @@ initialize_repo_missile_if_needed() {
     set -e
     cd "$repo_dir"
 
+    echo "\n$repo_dir COMMITS:"
+    git log -5 --oneline --no-merges -- "$SOURCE_FILES"
+    echo ""
+
     if [ ! -f "$HASH_FILE_PATH" ]; then
       echo "--- $repo_dir has no tracking file."
       echo "--- probably because this is the first time running this action."
@@ -87,20 +91,12 @@ echo "--- CHECKING FOR NEW COMMITS ---"
 
 cd target-repo
 
-echo "TARGET REPO COMMITS:"
-git log -5 --oneline --no-merges -- "$SOURCE_FILES"
-echo ""
-
 TARGET_LAST_SYNC_COMMIT_HASH=$(cat "$HASH_FILE_PATH")
 TARGET_LAST_SYNC_COMMIT_DATE=$(git log "$TARGET_LAST_SYNC_COMMIT_HASH"..HEAD --oneline --no-merges -- "$SOURCE_FILES")
 echo "--- Last sync commit date in target-repo is: $TARGET_LAST_SYNC_COMMIT_DATE"
 
 cd ..
 cd source-repo
-
-echo "SOURCE REPO COMMITS:"
-git log -5 --oneline --no-merges -- "$SOURCE_FILES"
-echo ""
 
 SOURCE_NEWER_COMMIT_HASHES=$(git log --since="$TARGET_LAST_SYNC_COMMIT_DATE" --format=%H --reverse --no-merges)
 
