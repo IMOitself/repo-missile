@@ -12,7 +12,7 @@ setup_folders() {
     mkdir -p "subfolder"
     echo "$(date)" > hello.txt
 
-    git config set advice.defaultBranchName false
+    git config --global --add safe.directory "$(pwd)"
     git init .
     git status
 
@@ -22,6 +22,9 @@ setup_folders() {
 
     git add .
     git commit -m "initial commit"
+
+    # remove .git for repo-missile to not consider this directory as a submodule
+    rm -rf .git
 
     cd ..
 }
