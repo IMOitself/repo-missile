@@ -49,10 +49,10 @@ initialize_repo_missile_if_needed() {
     if [ ! -f "$HASH_FILE_PATH" ]; then
       echo "--- $repo_dir has no tracking file."
       echo "--- probably because this is the first time running this action."
-      echo "--- Initializing tracking for $repo_dir ---"
+      echo "--- INITIALIZING TRACKING FILE FOR $repo_dir ---"
 
       mkdir -p "$(dirname "$HASH_FILE_PATH")"
-      git rev-parse HEAD > "$HASH_FILE_PATH"
+      git log -1 --format=%H -- "$SOURCE_FILES" > "$HASH_FILE_PATH"
 
       git add "$HASH_FILE_PATH"
       git commit -m "repo-missile: initialize tracking file"
@@ -78,3 +78,36 @@ if [ "$init_occurred" = true ]; then
   echo "--- INITIAL SETUP COMPLETED ---"
   exit 0
 fi
+
+
+
+
+
+echo "--- CHECKING FOR NEW COMMITS ---"
+
+cd target-repo
+
+echo "TARGET REPO COMMITS:"
+git log -5 --oneline --no-merges -- "$SOURCE_FILES"
+echo ""
+
+TARGET_LAST_SYNC_COMMIT_HASH=$(cat "$HASH_FILE_PATH")
+TARGET_LAST_SYNC_COMMIT_DATE=$(git log "$TARGET_LAST_SYNC_COMMIT_HASH"..HEAD --oneline --no-merges -- "$SOURCE_FILES")
+echo "--- Last sync commit date in target-repo is: $TARGET_LAST_SYNC_COMMIT_DATE"
+
+cd ..
+cd source-repo
+
+echo "SOURCE REPO COMMITS:"
+git log -5 --oneline --no-merges -- "$SOURCE_FILES"
+echo ""
+
+SOURCE_NEWER_COMMIT_HASHES=$(git log --since="$TARGET_LAST_SYNC_COMMIT_DATE" --format=%H --reverse --no-merges)
+
+if [ -z "$SOURCE_NEWER_COMMIT_HASHES" ]; then
+    echo "--- No new commits found in source-repo. Exiting."
+    exit 0
+fi
+
+echo "--- Found newer commits in source-repo to be applied:"
+git log --since="$TARGET_LAST_SYNC_COMMIT_DATE" --oneline --no-merges
