@@ -49,7 +49,7 @@ initialize_sync_on_repo_if_needed(){
     )
 }
 
-push(){
+push_action(){
     source_repo_folder="$1"
     target_repo_folder="$2"
     echo ""
@@ -73,12 +73,14 @@ push(){
     is_source_at_last_sync=$( \
     repo_folder=$source_repo_folder
     cd "$repo_folder" || exit
+    # check if the last commit has the sync tag. does not need to be subfolder when scope is implemented
     echo $(git log -1 --pretty=format:%B | grep -q "$sync_tag" && echo 1 || echo 0)
     )
 
     is_target_at_last_sync=$( \
     repo_folder=$target_repo_folder
     cd "$repo_folder" || exit
+    # check if the last commit has the sync tag. does not need to be subfolder when scope is implemented
     echo $(git log -1 --pretty=format:%B | grep -q "$sync_tag" && echo 1 || echo 0)
     )
 
@@ -132,15 +134,24 @@ push(){
         echo "TODO: implement"
     fi
 
-    echo "TODO: amend last commits to have $sync_tag"
+    echo "amending last commits of both repos with $sync_tag for tracking..."
+    # amend the last commit of both repos to include the sync tag. does not need to be subfolder when scope is implemented
+    (
+    cd "$target_repo_folder" || exit
+    git commit --amend -m "$(git log -1 --pretty=format:%B)" -m "$sync_tag"
+    
+    cd ..
+    cd "$source_repo_folder" || exit
+    git commit --amend -m "$(git log -1 --pretty=format:%B)" -m "$sync_tag"
+    )
 }
 
 
 
 echo ""
 echo simulates first time uploading the workflow file
-push $A $B
-push $B $A
+push_action $A $B
+push_action $B $A
 
 (
 cd "$A" || exit
@@ -162,9 +173,9 @@ git commit -m "create hi.txt"
 echo "hi there :D" > subfolder/hi.txt
 git add .
 git commit -m "update hi.txt"
+)
 
-cd ..
-push $A $B
+push_action $A $B
 
 (
 cd "$A" || exit
@@ -174,9 +185,7 @@ cd "$B" || exit
 git log --oneline
 )
 
-push $B $A
-)
-
+push_action $B $A
 
 
 # remove .git for repo-missile to not consider this directory as a submodule
