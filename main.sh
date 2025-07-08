@@ -58,10 +58,42 @@ push(){
     is_initial=$(initialize_sync_on_repo_if_needed "$source_repo_folder" "$source_repo_name")
     is_initial=$(initialize_sync_on_repo_if_needed "$target_repo_folder" "$source_repo_name")
 
-    echo "var: $is_initial"
+    if [[ "$is_initial" -eq 1 ]]; then
+        echo INITIAL SETUP COMPLETE
+        return 0
+    fi
+
+    (
+    repo_folder=$source_repo_folder
+    cd "$repo_folder" || exit
+    last_commit_hash=$(git log -1 --pretty=format:%H)
+    is_last_commit_synced=$(git log -1 --pretty=format:%B | grep -q "#repo-missile" && echo 1 || echo 0)
+
+    if [[ "$is_last_commit_synced" -eq 1 ]]; then
+        echo "$repo_folder SOURCE IS AT LAST SYNC"
+    else
+        echo "$repo_folder SOURCE IS NOT AT LAST SYNC"
+    fi
+    )
+
+    (
+    repo_folder=$target_repo_folder
+    cd "$repo_folder" || exit
+    last_commit_hash=$(git log -1 --pretty=format:%H)
+    is_last_commit_synced=$(git log -1 --pretty=format:%B | grep -q "#repo-missile" && echo 1 || echo 0)
+
+    if [[ "$is_last_commit_synced" -eq 1 ]]; then
+        echo "$repo_folder TARGET IS AT LAST SYNC"
+    else
+        echo "$repo_folder TARGET IS NOT AT LAST SYNC"
+    fi
+    )
 }
 
-# simulates first time uploading the workflow file
+
+
+echo ""
+echo simulates first time uploading the workflow file
 push $A $B
 push $B $A
 
@@ -73,6 +105,8 @@ cd "$B" || exit
 git log --oneline
 )
 
+echo ""
+echo simulates one repo A has more commits than repo B
 (
 cd "$A" || exit
 echo "newly created file :D" > subfolder/hi.txt
@@ -86,6 +120,7 @@ git commit -m "update hi.txt"
 
 cd ..
 push $A $B
+push $B $A
 )
 
 (
