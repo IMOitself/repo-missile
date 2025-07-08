@@ -2,8 +2,6 @@ A="A"
 B="B"
 default_user_email="IMOitself@users.noreply.github.com"
 default_user_name="IMOitself"
-git config user.email "$default_user_email"
-git config user.name "$default_user_name"
 
 setup_folders() {
     F="$1"
