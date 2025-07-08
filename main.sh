@@ -52,6 +52,9 @@ initialize_sync_on_repo_if_needed(){
 push(){
     source_repo_folder="$1"
     target_repo_folder="$2"
+    echo ""
+    echo "source: $source_repo_folder"
+    echo "target: $target_repo_folder"
 
     source_repo_name="IMOaswell/A"
     is_initial=0
@@ -63,31 +66,48 @@ push(){
         return 0
     fi
 
-    (
+    is_source_at_last_sync=0
+    is_target_at_last_sync=0
+    sync_tag="#repo-missile"
+
+    is_source_at_last_sync=$( \
     repo_folder=$source_repo_folder
     cd "$repo_folder" || exit
-    last_commit_hash=$(git log -1 --pretty=format:%H)
-    is_last_commit_synced=$(git log -1 --pretty=format:%B | grep -q "#repo-missile" && echo 1 || echo 0)
-
-    if [[ "$is_last_commit_synced" -eq 1 ]]; then
-        echo "$repo_folder SOURCE IS AT LAST SYNC"
-    else
-        echo "$repo_folder SOURCE IS NOT AT LAST SYNC"
-    fi
+    echo $(git log -1 --pretty=format:%B | grep -q "$sync_tag" && echo 1 || echo 0)
     )
 
-    (
+    is_target_at_last_sync=$( \
     repo_folder=$target_repo_folder
     cd "$repo_folder" || exit
-    last_commit_hash=$(git log -1 --pretty=format:%H)
-    is_last_commit_synced=$(git log -1 --pretty=format:%B | grep -q "#repo-missile" && echo 1 || echo 0)
-
-    if [[ "$is_last_commit_synced" -eq 1 ]]; then
-        echo "$repo_folder TARGET IS AT LAST SYNC"
-    else
-        echo "$repo_folder TARGET IS NOT AT LAST SYNC"
-    fi
+    echo $(git log -1 --pretty=format:%B | grep -q "$sync_tag" && echo 1 || echo 0)
     )
+
+    if [[ "$is_source_at_last_sync" -eq 1 && "$is_target_at_last_sync" -eq 1 ]]; then
+        echo "BOTH REPOS ALREADY IN SYNC"
+
+        return 0
+    fi
+    
+    if [[ "$is_source_at_last_sync" -eq 0 && "$is_target_at_last_sync" -eq 1 ]]; then
+        echo "SOURCE REPO $source_repo_folder HAS MORE COMMITS"
+        echo "giving commits to $target_repo_folder..."
+        echo "TODO: implement"
+        echo ""
+        
+    elif [[ "$is_source_at_last_sync" -eq 1 && "$is_target_at_last_sync" -eq 0 ]]; then
+        echo "TARGET REPO $target_repo_folder HAS MORE COMMITS"
+        echo "taking commits from $target_repo_folder..."
+        echo "TODO: implement"
+        echo ""
+        
+    else
+        echo "BOTH REPOS HAVE NEWER COMMITS"
+        echo "taking commits from $target_repo_folder..."
+        echo "giving commits to $target_repo_folder..."
+        echo "TODO: implement"
+    fi
+
+    echo "TODO: amend last commits to have $sync_tag"
 }
 
 
