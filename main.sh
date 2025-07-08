@@ -1,5 +1,9 @@
 A="A"
 B="B"
+default_user_email="IMOitself@users.noreply.github.com"
+default_user_name="IMOitself"
+git config user.email "$default_user_email"
+git config user.name "$default_user_name"
 
 setup_folders() {
     F="$1"
@@ -17,8 +21,8 @@ setup_folders() {
     git status
 
     git config init.defaultBranch "master"
-    git config user.email "IMOitself@users.github.com"
-    git config user.name "IMOitself"
+    git config user.email "$default_user_email"
+    git config user.name "$default_user_name"
 
     git add .
     git commit -m "initial commit"
@@ -29,6 +33,8 @@ setup_folders() {
 setup_folders $A
 setup_folders $B
 
+sync_tag="#repo-missile"
+
 initialize_sync_on_repo_if_needed(){
     repo_folder="$1"
     repo_name="$2"
@@ -36,11 +42,17 @@ initialize_sync_on_repo_if_needed(){
     (
     cd "$repo_folder" || exit 1
 
-    last_sync_commit_hash=$(git log --grep="#repo-missile" -n 1 2>/dev/null)
+    last_sync_commit_hash=$(git log --grep="$sync_tag" -n 1 2>/dev/null)
 
     if [ -z "$last_sync_commit_hash" ]; then
-        m="#repo-missile initial setup"
-        git commit --allow-empty -m "$m" -m "made in $repo_name" >/dev/null 2>&1
+        m="repo-missile: initial setup"
+        git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        git config user.name "github-actions[bot]"
+        git commit --allow-empty -m "$m" -m "$sync_tag made in $repo_name" >/dev/null 2>&1
+
+        #reset user config
+        git config user.email "$default_user_email"
+        git config user.name "$default_user_name"
 
         echo 1
     else
@@ -86,7 +98,6 @@ push_action(){
 
     if [[ "$is_source_at_last_sync" -eq 1 && "$is_target_at_last_sync" -eq 1 ]]; then
         echo "BOTH REPOS ALREADY IN SYNC"
-
         return 0
     fi
     
@@ -96,7 +107,7 @@ push_action(){
         
         (
         cd "$source_repo_folder" || exit
-        source_last_sync_commit_hash=$(git log --grep="#repo-missile" -n 1 --pretty=format:%H)
+        source_last_sync_commit_hash=$(git log --grep="$sync_tag" -n 1 --pretty=format:%H)
         mapfile -t commit_list < <(git log --reverse --oneline --pretty=format:%H "$source_last_sync_commit_hash"..HEAD)
         
         cd ..
@@ -134,15 +145,25 @@ push_action(){
         echo "TODO: implement"
     fi
 
-    echo "amending last commits of both repos with $sync_tag for tracking..."
+    echo "committing on both repos with $sync_tag for tracking..."
     # amend the last commit of both repos to include the sync tag. does not need to be subfolder when scope is implemented
     (
     cd "$target_repo_folder" || exit
-    git commit --amend -m "$(git log -1 --pretty=format:%B)" -m "$sync_tag"
+    git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+    git config user.name "github-actions[bot]"
+    git commit --allow-empty -m "repo-missile: sync commits" -m "$sync_tag"
+
+    #reset user config
+    git config user.email "$default_user_email"
+    git config user.name "$default_user_name"
     
     cd ..
     cd "$source_repo_folder" || exit
-    git commit --amend -m "$(git log -1 --pretty=format:%B)" -m "$sync_tag"
+    git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+    git config user.name "github-actions[bot]"
+    git commit --allow-empty -m "repo-missile: sync commits" -m "$sync_tag"
+    git config user.email "$default_user_email"
+    git config user.name "$default_user_name"
     )
 }
 
