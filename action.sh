@@ -13,9 +13,6 @@ COMMIT_EMAIL="$7"
 COMMIT_MESSAGE="$8"
 API_TOKEN_GITHUB="$API_TOKEN_GITHUB"
 
-HASH_FILE_PATH=".github/workflows/repo-missile/DONT-DELETE.latestcommithash"
-SYNC_BRANCH="repo-missile"
-
 
 if [ -z "$COMMIT_USERNAME" ]; then
   COMMIT_USERNAME="$DESTINATION_USERNAME"
@@ -38,6 +35,16 @@ echo "--- DETERMINING ACTION TO MAKE ---"
 echo "Cloning source and target repositories..."
 git clone "https://$API_TOKEN_GITHUB@github.com/$GITHUB_REPOSITORY.git" source-repo
 git clone --single-branch --branch "$DESTINATION_BRANCH" "https://$API_TOKEN_GITHUB@github.com/$DESTINATION_USERNAME/$DESTINATION_REPOSITORY.git" target-repo
+
+echo ""
+echo "REPOSITORY: $GITHUB_REPOSITORY"
+echo ""
+echo "DESTINATION_USERNAME: $DESTINATION_USERNAME"
+echo ""
+echo "DESTINATION_REPOSITORY: $DESTINATION_REPOSITORY"
+echo ""
+exit 0
+#TODO: refactor all
 
 initialize_repo_missile_if_needed() {
     local repo_dir="$1"
