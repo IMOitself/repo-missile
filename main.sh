@@ -62,11 +62,13 @@ initialize_sync_on_repo_if_needed(){
 push_action(){
     source_repo_folder="$1"
     target_repo_folder="$2"
+    source_repo_name="$3"
+    target_repo_name="$4"
+    
     echo ""
     echo "source: $source_repo_folder"
     echo "target: $target_repo_folder"
 
-    source_repo_name="IMOaswell/A"
     is_initial=0
     is_initial=$(initialize_sync_on_repo_if_needed "$source_repo_folder" "$source_repo_name")
     is_initial=$(initialize_sync_on_repo_if_needed "$target_repo_folder" "$source_repo_name")
@@ -149,7 +151,7 @@ push_action(){
     cd "$target_repo_folder" || exit
     git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
     git config user.name "github-actions[bot]"
-    git commit --allow-empty -m "repo-missile: sync commits" -m "$sync_tag"
+    git commit --allow-empty -m "repo-missile: take commits from $source_repo_name" -m "$sync_tag"
 
     #reset user config
     git config user.email "$default_user_email"
@@ -159,7 +161,7 @@ push_action(){
     cd "$source_repo_folder" || exit
     git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
     git config user.name "github-actions[bot]"
-    git commit --allow-empty -m "repo-missile: sync commits" -m "$sync_tag"
+    git commit --allow-empty -m "repo-missile: give commits to $target_repo_name" -m "$sync_tag"
     git config user.email "$default_user_email"
     git config user.name "$default_user_name"
     )
@@ -169,8 +171,8 @@ push_action(){
 
 echo ""
 echo simulates first time uploading the workflow file
-push_action $A $B
-push_action $B $A
+push_action $A $B "IMOaswell/A" "IMOaswell/B"
+push_action $B $A "IMOaswell/B" "IMOaswell/A"
 
 (
 cd "$A" || exit
@@ -194,7 +196,7 @@ git add .
 git commit -m "update hi.txt"
 )
 
-push_action $A $B
+push_action $A $B "IMOaswell/A" "IMOaswell/B"
 
 (
 cd "$A" || exit
@@ -204,7 +206,7 @@ cd "$B" || exit
 git log --oneline
 )
 
-push_action $B $A
+push_action $B $A "IMOaswell/B" "IMOaswell/A"
 
 echo ""
 echo simulates repo B has more commits than repo A
@@ -220,7 +222,7 @@ git add .
 git commit -m "update hello.txt"
 )
 
-push_action $B $A
+push_action $B $A "IMOaswell/B" "IMOaswell/A"
 
 (
 cd "$A" || exit
@@ -231,7 +233,7 @@ git log --oneline
 cd ..
 )
 
-push_action $A $B
+push_action $A $B "IMOaswell/A" "IMOaswell/B"
 
 # remove .git for repo-missile to not consider this directory as a submodule
 cd $A && rm -rf .git
