@@ -34,19 +34,17 @@ initialize_sync_on_repo_if_needed(){
     repo_name="$2"
 
     (
-    cd "$repo_folder" || exit
-    pwd
+    cd "$repo_folder" || exit 1
 
-    last_sync_commit_hash=$(git log --grep="#repo-missile" -1 --pretty=format:%H)
+    last_sync_commit_hash=$(git log --grep="#repo-missile" -n 1 2>/dev/null)
+
     if [ -z "$last_sync_commit_hash" ]; then
-        echo ""
-        echo "last sync commit not found."
-        echo "probably because it is not initialized yet."
-        echo ""
+        m="#repo-missile initial setup"
+        git commit --allow-empty -m "$m" -m "made in $repo_name" >/dev/null 2>&1
 
-        m="#repo-missile initial sync" 
-        git commit --allow-empty -m "$m" -m "made in $repo_name"
-        git log --oneline
+        echo 1
+    else
+        echo 0
     fi
     )
 }
@@ -56,12 +54,47 @@ push(){
     target_repo_folder="$2"
 
     source_repo_name="IMOaswell/A"
-    initialize_sync_on_repo_if_needed "$source_repo_folder" "$source_repo_name"
-    initialize_sync_on_repo_if_needed "$target_repo_folder" "$source_repo_name"
+    is_initial=0
+    is_initial=$(initialize_sync_on_repo_if_needed "$source_repo_folder" "$source_repo_name")
+    is_initial=$(initialize_sync_on_repo_if_needed "$target_repo_folder" "$source_repo_name")
+
+    echo "var: $is_initial"
 }
 
+# simulates first time uploading the workflow file
 push $A $B
+push $B $A
 
+(
+cd "$A" || exit
+git log --oneline
+cd ..
+cd "$B" || exit
+git log --oneline
+)
+
+(
+cd "$A" || exit
+echo "newly created file :D" > subfolder/hi.txt
+
+git add .
+git commit -m "create hi.txt"
+
+echo "hi there :D" > subfolder/hi.txt
+git add .
+git commit -m "update hi.txt"
+
+cd ..
+push $A $B
+)
+
+(
+cd "$A" || exit
+git log --oneline
+cd ..
+cd "$B" || exit
+git log --oneline
+)
 
 
 
