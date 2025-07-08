@@ -6,6 +6,9 @@ A fork of [github-action-push-to-another-repository](https://github.com/cpina/gi
 > which is a fork of [nkoppel's](https://github.com/nkoppel/push-files-to-another-repository) <br>
 > which is a fork of [cpina's](https://github.com/cpina/github-action-push-to-another-repository) 
 
+> [!IMPORTANT]
+> there's no need to change `IMOitself/repo-missile@0.2` at the code below. <br> do not change it to `IMOitself/repo-missile@master` as it is currently unstable. <br><br> current development is happening on [experiment](https://github.com/IMOitself/repo-missile/tree/experiment) branch.
+
 ## TODO
 - [ ] refactor entrypoint.sh
 - [ ] make it not squash commits on push
