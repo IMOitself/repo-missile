@@ -162,7 +162,7 @@ git log --oneline
 )
 
 echo ""
-echo simulates one repo A has more commits than repo B
+echo simulates repo A has more commits than repo B
 (
 cd "$A" || exit
 echo "newly created file :D" > subfolder/hi.txt
@@ -187,6 +187,32 @@ git log --oneline
 
 push_action $B $A
 
+echo ""
+echo simulates repo B has more commits than repo A
+(
+cd "$B" || exit
+echo "file edited hehe :D" > subfolder/hi.txt
+
+git add .
+git commit -m "update hi.txt again"
+
+echo "hello there :D" > hello.txt
+git add .
+git commit -m "update hello.txt"
+)
+
+push_action $B $A
+
+(
+cd "$A" || exit
+git log --oneline
+cd ..
+cd "$B" || exit
+git log --oneline
+cd ..
+)
+
+push_action $A $B
 
 # remove .git for repo-missile to not consider this directory as a submodule
 cd $A && rm -rf .git
