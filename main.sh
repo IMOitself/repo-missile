@@ -2,6 +2,8 @@ A="A"
 B="B"
 default_user_email="IMOitself@users.noreply.github.com"
 default_user_name="IMOitself"
+A_SUBFOLDER="subfolder"
+B_SUBFOLDER="libs"
 
 setup_folders() {
     F="$1"
@@ -11,8 +13,7 @@ setup_folders() {
 
     cd "$F" || exit
 
-    mkdir -p "subfolder"
-    echo "fixed text right here :D" > hello.txt
+    echo "fixed text right here. made in $F :D" > hello.txt
 
     git config --global --add safe.directory "$(pwd)"
     git init .
@@ -30,23 +31,30 @@ setup_folders() {
 
 setup_folders $A
 setup_folders $B
+(
+cd "$A" || exit
+mkdir "$A_SUBFOLDER"
+cd ..
+cd "$B" || exit
+mkdir "$B_SUBFOLDER"
+)
 
 sync_tag="#repo-missile"
 
 initialize_sync_on_repo_if_needed(){
     repo_folder="$1"
     repo_name="$2"
+    subfolder_to_sync="$3"
 
     (
     cd "$repo_folder" || exit 1
 
-    last_sync_commit_hash=$(git log --grep="$sync_tag" -n 1 2>/dev/null)
+    last_sync_commit_hash=$(git log --grep="$sync_tag" -n 1 2>/dev/null) # not really a commit hash
 
     if [ -z "$last_sync_commit_hash" ]; then
-        m="repo-missile: initial setup"
         git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
         git config user.name "github-actions[bot]"
-        git commit --allow-empty -m "$m" -m "$sync_tag made in $repo_name" >/dev/null 2>&1
+        git commit --allow-empty -m "repo-missile: initial setup" -m "$sync_tag made in $repo_name" >/dev/null 2>&1
 
         #reset user config
         git config user.email "$default_user_email"
@@ -63,15 +71,16 @@ push_action(){
     source_repo_folder="$1"
     target_repo_folder="$2"
     source_repo_name="$3"
-    target_repo_name="$4"
+    source_subfolder_to_sync="$4"
+    target_subfolder_to_sync="$5"
     
     echo ""
     echo "source: $source_repo_folder"
     echo "target: $target_repo_folder"
 
     is_initial=0
-    is_initial=$(initialize_sync_on_repo_if_needed "$source_repo_folder" "$source_repo_name")
-    is_initial=$(initialize_sync_on_repo_if_needed "$target_repo_folder" "$source_repo_name")
+    is_initial=$(initialize_sync_on_repo_if_needed "$source_repo_folder" "$source_repo_name" "$source_subfolder_to_sync")
+    is_initial=$(initialize_sync_on_repo_if_needed "$target_repo_folder" "$source_repo_name" "$target_subfolder_to_sync")
 
     if [[ "$is_initial" -eq 1 ]]; then
         echo INITIAL SETUP COMPLETE
@@ -85,16 +94,31 @@ push_action(){
     is_source_at_last_sync=$( \
     repo_folder=$source_repo_folder
     cd "$repo_folder" || exit
-    # check if the last commit has the sync tag. does not need to be subfolder when scope is implemented
-    echo $(git log -1 --pretty=format:%B | grep -q "$sync_tag" && echo 1 || echo 0)
+
+    result=$(git log -1 --pretty=format:%B -- "$source_subfolder_to_sync" 2>/dev/null | grep -q "$sync_tag" && echo 1 || echo 0)
+
+    if [[ -z "$result" || "$result" -eq 0 ]]; then
+        # check if the last commit that has a sync tag is not in the subfolder
+        result=$(git log -1 --pretty=format:%B 2>/dev/null | grep -q "$sync_tag" && echo 1 || echo 0)
+    fi
+    echo $result
     )
 
     is_target_at_last_sync=$( \
     repo_folder=$target_repo_folder
     cd "$repo_folder" || exit
-    # check if the last commit has the sync tag. does not need to be subfolder when scope is implemented
-    echo $(git log -1 --pretty=format:%B | grep -q "$sync_tag" && echo 1 || echo 0)
+    
+    result=$(git log -1 --pretty=format:%B -- "$target_subfolder_to_sync" 2>/dev/null | grep -q "$sync_tag" && echo 1 || echo 0)
+    
+    if [[ -z "$result" || "$result" -eq 0 ]]; then
+        # check if the last commit that has a sync tag is not in the subfolder
+        result=$(git log -1 --pretty=format:%B 2>/dev/null | grep -q "$sync_tag" && echo 1 || echo 0)
+    fi
+    echo $result
     )
+
+    echo "is_source_at_last_sync: $is_source_at_last_sync"
+    echo "is_target_at_last_sync: $is_target_at_last_sync"
 
     if [[ "$is_source_at_last_sync" -eq 1 && "$is_target_at_last_sync" -eq 1 ]]; then
         echo "BOTH REPOS ALREADY IN SYNC"
@@ -108,7 +132,7 @@ push_action(){
         (
         cd "$source_repo_folder" || exit
         source_last_sync_commit_hash=$(git log --grep="$sync_tag" -n 1 --pretty=format:%H)
-        mapfile -t commit_list < <(git log --reverse --oneline --pretty=format:%H "$source_last_sync_commit_hash"..HEAD)
+        mapfile -t commit_list < <(git log --reverse --oneline --pretty=format:%H "$source_last_sync_commit_hash"..HEAD -- "$source_subfolder_to_sync")
         
         cd ..
         cd "$target_repo_folder" || exit
@@ -133,16 +157,26 @@ push_action(){
         echo ""
         
     elif [[ "$is_source_at_last_sync" -eq 1 && "$is_target_at_last_sync" -eq 0 ]]; then
-        echo "TARGET REPO $target_repo_folder HAS MORE COMMITS"
-        echo "taking commits from $target_repo_folder..."
-        echo "TODO: implement"
         echo ""
+        echo "ERROR: TARGET REPO $target_repo_folder HAS MORE COMMITS"
+        echo "TODO: implement taking commits from $target_repo_folder"
+        echo ""
+        exit 1
         
+    elif [[ "$is_source_at_last_sync" -eq 0 && "$is_target_at_last_sync" -eq 0 ]]; then
+        echo ""
+        echo "ERROR: both repos have newer commits"
+        echo "TODO: implement taking commits from $target_repo_folder"
+        echo "TODO: then implement giving commits to $target_repo_folder"
+        echo ""
+        exit 1
     else
-        echo "BOTH REPOS HAVE NEWER COMMITS"
-        echo "taking commits from $target_repo_folder..."
-        echo "giving commits to $target_repo_folder..."
-        echo "TODO: implement"
+        echo ""
+        echo "ERROR: unknown state"
+        echo "is_source_at_last_sync: $is_source_at_last_sync"
+        echo "is_target_at_last_sync: $is_target_at_last_sync"
+        echo ""
+        exit 1
     fi
 
     echo "committing on both repos with $sync_tag for tracking..."
@@ -173,8 +207,8 @@ echo ""
 
 echo ""
 echo simulates first time uploading the workflow file
-push_action $A $B "IMOaswell/A" "IMOaswell/B"
-push_action $B $A "IMOaswell/B" "IMOaswell/A"
+push_action $A $B "IMOaswell/A" "$A_SUBFOLDER" "$B_SUBFOLDER"
+push_action $B $A "IMOaswell/B" "$B_SUBFOLDER" "$A_SUBFOLDER"
 
 (
 cd "$A" || exit
@@ -188,17 +222,22 @@ echo ""
 echo simulates repo A has more commits than repo B
 (
 cd "$A" || exit
-echo "newly created file :D" > subfolder/hi.txt
+echo "newly created file :D" > "$A_SUBFOLDER/hi.txt"
 
 git add .
-git commit -m "create hi.txt"
+git commit -m "create $A_SUBFOLDER/hi.txt"
 
-echo "hi there :D" > subfolder/hi.txt
+echo "not so fixed anymore :D" > "hello.txt"
+
 git add .
-git commit -m "update hi.txt"
+git commit -m "a commit that is not for subfolder"
+
+echo "hi there :D" > "$A_SUBFOLDER/hi.txt"
+git add .
+git commit -m "update $A_SUBFOLDER/hi.txt"
 )
 
-push_action $A $B "IMOaswell/A" "IMOaswell/B"
+push_action $A $B "IMOaswell/A" "$A_SUBFOLDER" "$B_SUBFOLDER"
 
 (
 cd "$A" || exit
@@ -208,23 +247,23 @@ cd "$B" || exit
 git log --oneline
 )
 
-push_action $B $A "IMOaswell/B" "IMOaswell/A"
+push_action $B $A "IMOaswell/B" "$B_SUBFOLDER" "$A_SUBFOLDER"
 
 echo ""
 echo simulates repo B has more commits than repo A
 (
 cd "$B" || exit
-echo "file edited hehe :D" > subfolder/hi.txt
+echo "file edited hehe :D" > "$B_SUBFOLDER/hi.txt"
 
 git add .
-git commit -m "update hi.txt again"
+git commit -m "update $B_SUBFOLDER/hi.txt again"
 
-echo "hello there :D" > hello.txt
+echo "hello there :D" > "hello.txt"
 git add .
-git commit -m "update hello.txt"
+git commit -m "a commit that is not for subfolder"
 )
 
-push_action $B $A "IMOaswell/B" "IMOaswell/A"
+push_action $B $A "IMOaswell/B" "$B_SUBFOLDER" "$A_SUBFOLDER"
 
 (
 cd "$A" || exit
@@ -235,7 +274,7 @@ git log --oneline
 cd ..
 )
 
-push_action $A $B "IMOaswell/A" "IMOaswell/B"
+push_action $A $B "IMOaswell/A" "$A_SUBFOLDER" "$B_SUBFOLDER"
 
 # remove .git for repo-missile to not consider this directory as a submodule
 cd $A && rm -rf .git
