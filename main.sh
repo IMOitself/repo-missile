@@ -117,8 +117,6 @@ push_action(){
     echo $result
     )
 
-    echo "is_source_at_last_sync: $is_source_at_last_sync"
-    echo "is_target_at_last_sync: $is_target_at_last_sync"
 
     if [[ "$is_source_at_last_sync" -eq 1 && "$is_target_at_last_sync" -eq 1 ]]; then
         echo "BOTH REPOS ALREADY IN SYNC"
@@ -130,30 +128,36 @@ push_action(){
         echo "giving commits to $target_repo_folder..."
         
         (
-        cd "$source_repo_folder" || exit
-        source_last_sync_commit_hash=$(git log --grep="$sync_tag" -n 1 --pretty=format:%H)
-        mapfile -t commit_list < <(git log --reverse --oneline --pretty=format:%H "$source_last_sync_commit_hash"..HEAD -- "$source_subfolder_to_sync")
+    cd "$source_repo_folder" || exit
+    source_last_sync_commit_hash=$(git log --grep="$sync_tag" -n 1 --pretty=format:%H)
+    mapfile -t commit_list < <(git log --reverse --pretty=format:%H "$source_last_sync_commit_hash"..HEAD -- "$source_subfolder_to_sync")
+
+    cd ..
+    cd "$target_repo_folder" || exit
+
+    for commit_hash in "${commit_list[@]}"; do
+        echo "Applying commit: $commit_hash"
+
+        COMMIT_MSG=$(git --git-dir="../$source_repo_folder/.git" log --format=%B -n 1 "$commit_hash")
+        COMMIT_AUTHOR=$(git --git-dir="../$source_repo_folder/.git" log --format="%an <%ae>" -n 1 "$commit_hash")
+        COMMIT_DATE=$(git --git-dir="../$source_repo_folder/.git" log --format=%ad -n 1 "$commit_hash")
+
+        git --git-dir="../$source_repo_folder/.git" diff "$commit_hash^..$commit_hash" -- "$source_subfolder_to_sync" | \
+            sed -e "s| a/$source_subfolder_to_sync| a/$target_subfolder_to_sync|g" \
+                -e "s| b/$source_subfolder_to_sync| b/$target_subfolder_to_sync|g" \
+            > /tmp/commit.patch
+        if git apply /tmp/commit.patch; then
+            git add "$target_subfolder_to_sync"
+            git commit --message="$COMMIT_MSG" --author="$COMMIT_AUTHOR" --date="$COMMIT_DATE"
+        else
+            echo "ERROR: Failed to apply patch for commit $commit_hash." >&2
+            echo "Manual intervention required. Patch file saved at /tmp/commit.patch" >&2
+            exit 1
+        fi
         
-        cd ..
-        cd "$target_repo_folder" || exit
-
-        git remote add temp_source "../$source_repo_folder"
-        git fetch temp_source
-
-        for commit_hash in "${commit_list[@]}"; do
-            echo "Applying commit: $commit_hash"
-        
-            if ! git cherry-pick "$commit_hash"; then
-                echo "ERROR: Cherry-pick failed for commit $commit_hash."
-                echo "Aborting the cherry-pick and the script."
-                git cherry-pick --abort
-                git remote remove temp_source # Clean up before exiting
-                exit 1
-            fi
-        done
-
-        git remote remove temp_source
-        )
+        rm /tmp/commit.patch
+    done
+)
         echo ""
         
     elif [[ "$is_source_at_last_sync" -eq 1 && "$is_target_at_last_sync" -eq 0 ]]; then
@@ -180,7 +184,6 @@ push_action(){
     fi
 
     echo "committing on both repos with $sync_tag for tracking..."
-    # amend the last commit of both repos to include the sync tag. does not need to be subfolder when scope is implemented
     (
     cd "$target_repo_folder" || exit
     git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -225,16 +228,16 @@ cd "$A" || exit
 echo "newly created file :D" > "$A_SUBFOLDER/hi.txt"
 
 git add .
-git commit -m "create $A_SUBFOLDER/hi.txt"
+git commit -q -m "create $A_SUBFOLDER/hi.txt"
 
 echo "not so fixed anymore :D" > "hello.txt"
 
 git add .
-git commit -m "a commit that is not for subfolder"
+git commit -q -m "a commit that is not for subfolder"
 
 echo "hi there :D" > "$A_SUBFOLDER/hi.txt"
 git add .
-git commit -m "update $A_SUBFOLDER/hi.txt"
+git commit -q -m "update $A_SUBFOLDER/hi.txt"
 )
 
 push_action $A $B "IMOaswell/A" "$A_SUBFOLDER" "$B_SUBFOLDER"
@@ -253,14 +256,14 @@ echo ""
 echo simulates repo B has more commits than repo A
 (
 cd "$B" || exit
-echo "file edited hehe :D" > "$B_SUBFOLDER/hi.txt"
+echo "uwu :D" > "$B_SUBFOLDER/hi.txt"
 
 git add .
-git commit -m "update $B_SUBFOLDER/hi.txt again"
+git commit -q -m "update $B_SUBFOLDER/hi.txt again"
 
 echo "hello there :D" > "hello.txt"
 git add .
-git commit -m "a commit that is not for subfolder"
+git commit -q -m "a commit that is not for subfolder"
 )
 
 push_action $B $A "IMOaswell/B" "$B_SUBFOLDER" "$A_SUBFOLDER"
