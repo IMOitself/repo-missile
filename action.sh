@@ -82,6 +82,7 @@ push_action(){
     is_initial=$(initialize_sync_on_repo_if_needed "$source_repo_folder" "$source_repo_name" "$source_subfolder_to_sync")
     is_initial=$(initialize_sync_on_repo_if_needed "$target_repo_folder" "$source_repo_name" "$target_subfolder_to_sync")
 
+    exit 0
     if [[ "$is_initial" -eq 1 ]]; then
         echo INITIAL SETUP COMPLETE
         return 0
