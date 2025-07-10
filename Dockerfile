@@ -1,6 +1,6 @@
 FROM alpine:3.12
 
-RUN apk add --no-cache git
+RUN apk add --no-cache git bash
 
 COPY action.sh /action.sh
 

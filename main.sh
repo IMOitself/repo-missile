@@ -1,44 +1,45 @@
-#!/bin/bash -l
-
-set -e # if a command fails, exit the script
-
-# --- CONFIGS & INPUTS ---
-SOURCE_FILES="$1"
-DESTINATION_USERNAME="$2"
-DESTINATION_REPOSITORY="$3"
-DESTINATION_BRANCH="$4"
-DESTINATION_DIRECTORY="$5" 
-COMMIT_USERNAME="$6"
-COMMIT_EMAIL="$7"
-COMMIT_MESSAGE="$8"
-API_TOKEN_GITHUB="$API_TOKEN_GITHUB"
-
-
-if [ -z "$COMMIT_USERNAME" ]; then
-  COMMIT_USERNAME="$DESTINATION_USERNAME"
-fi
-
-git config --global user.email "$COMMIT_EMAIL"
-git config --global user.name "$COMMIT_USERNAME"
-
-# Remove git directory if it exists to prevent errors
-rm -rf .git
-
 A="A"
 B="B"
-A_SUBFOLDER="$SOURCE_FILES"
-B_SUBFOLDER="$DESTINATION_DIRECTORY"
+default_user_email="IMOitself@users.noreply.github.com"
+default_user_name="IMOitself"
+A_SUBFOLDER="subfolder"
+B_SUBFOLDER="libs"
 
-echo "Cloning source and target repositories..."
-git clone "https://$API_TOKEN_GITHUB@github.com/$GITHUB_REPOSITORY.git" $A
-git clone --single-branch --branch "$DESTINATION_BRANCH" "https://$API_TOKEN_GITHUB@github.com/$DESTINATION_USERNAME/$DESTINATION_REPOSITORY.git" $B
+setup_folders() {
+    F="$1"
 
-default_user_email="$COMMIT_EMAIL"
-default_user_name="$COMMIT_USERNAME"
+    rm -rf "$F"
+    mkdir "$F"
+
+    cd "$F" || exit
+
+    echo "fixed text right here. made in $F :D" > hello.txt
+
+    git config --global --add safe.directory "$(pwd)"
+    git init .
+    git status
+
+    git config init.defaultBranch "master"
+    git config user.email "$default_user_email"
+    git config user.name "$default_user_name"
+
+    git add .
+    git commit -m "initial commit"
+
+    cd ..
+}
+
+setup_folders $A
+setup_folders $B
+(
+cd "$A" || exit
+mkdir "$A_SUBFOLDER"
+cd ..
+cd "$B" || exit
+mkdir "$B_SUBFOLDER"
+)
+
 sync_tag="#repo-missile"
-
-
-# --- SCRIPT START ---
 
 initialize_sync_on_repo_if_needed(){
     repo_folder="$1"
@@ -53,12 +54,11 @@ initialize_sync_on_repo_if_needed(){
     if [ -z "$last_sync_commit_hash" ]; then
         git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
         git config user.name "github-actions[bot]"
-        git commit --allow-empty -m "repo-missile: initial setup" -m "$sync_tag made in $repo_name" 
+        git commit --allow-empty -m "repo-missile: initial setup" -m "$sync_tag made in $repo_name" >/dev/null 2>&1
 
         #reset user config
         git config user.email "$default_user_email"
         git config user.name "$default_user_name"
-        git push
 
         echo 1
     else
@@ -89,6 +89,7 @@ push_action(){
 
     is_source_at_last_sync=0
     is_target_at_last_sync=0
+    sync_tag="#repo-missile"
 
     is_source_at_last_sync=$( \
     repo_folder=$source_repo_folder
@@ -192,7 +193,6 @@ push_action(){
     #reset user config
     git config user.email "$default_user_email"
     git config user.name "$default_user_name"
-    git push
     
     cd ..
     cd "$source_repo_folder" || exit
@@ -201,9 +201,85 @@ push_action(){
     git commit --allow-empty -m "repo-missile: give commits to $target_repo_name" -m "$sync_tag"
     git config user.email "$default_user_email"
     git config user.name "$default_user_name"
-    git push
     )
 }
 
+echo ""
+echo "--- SIMULATIONS ---"
+echo ""
 
-push_action $A $B "$GITHUB_REPOSITORY" "$A_SUBFOLDER" "$B_SUBFOLDER"
+echo ""
+echo simulates first time uploading the workflow file
+push_action $A $B "IMOaswell/A" "$A_SUBFOLDER" "$B_SUBFOLDER"
+push_action $B $A "IMOaswell/B" "$B_SUBFOLDER" "$A_SUBFOLDER"
+
+(
+cd "$A" || exit
+git log --oneline
+cd ..
+cd "$B" || exit
+git log --oneline
+)
+
+echo ""
+echo simulates repo A has more commits than repo B
+(
+cd "$A" || exit
+echo "newly created file :D" > "$A_SUBFOLDER/hi.txt"
+
+git add .
+git commit -q -m "create $A_SUBFOLDER/hi.txt"
+
+echo "not so fixed anymore :D" > "hello.txt"
+
+git add .
+git commit -q -m "a commit that is not for subfolder"
+
+echo "hi there :D" > "$A_SUBFOLDER/hi.txt"
+git add .
+git commit -q -m "update $A_SUBFOLDER/hi.txt"
+)
+
+push_action $A $B "IMOaswell/A" "$A_SUBFOLDER" "$B_SUBFOLDER"
+
+(
+cd "$A" || exit
+git log --oneline
+cd ..
+cd "$B" || exit
+git log --oneline
+)
+
+push_action $B $A "IMOaswell/B" "$B_SUBFOLDER" "$A_SUBFOLDER"
+
+echo ""
+echo simulates repo B has more commits than repo A
+(
+cd "$B" || exit
+echo "uwu :D" > "$B_SUBFOLDER/hi.txt"
+
+git add .
+git commit -q -m "update $B_SUBFOLDER/hi.txt again"
+
+echo "hello there :D" > "hello.txt"
+git add .
+git commit -q -m "a commit that is not for subfolder"
+)
+
+push_action $B $A "IMOaswell/B" "$B_SUBFOLDER" "$A_SUBFOLDER"
+
+(
+cd "$A" || exit
+git log --oneline
+cd ..
+cd "$B" || exit
+git log --oneline
+cd ..
+)
+
+push_action $A $B "IMOaswell/A" "$A_SUBFOLDER" "$B_SUBFOLDER"
+
+# remove .git for repo-missile to not consider this directory as a submodule
+cd $A && rm -rf .git
+cd ..
+cd $B && rm -rf .git
