@@ -50,20 +50,20 @@ initialize_sync_on_repo_if_needed(){
 
     last_sync_commit_hash=$(git log --grep="$sync_tag" -n 1 2>/dev/null) # not really a commit hash
 
-    #if [ -z "$last_sync_commit_hash" ]; then
-    git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-    git config user.name "github-actions[bot]"
-    git commit --allow-empty -m "repo-missile: initial setup" -m "$sync_tag made in $repo_name" 
+    if [ -z "$last_sync_commit_hash" ]; then
+        git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        git config user.name "github-actions[bot]"
+        git commit --allow-empty -m "repo-missile: initial setup" -m "$sync_tag made in $repo_name" 
 
-    #reset user config
-    git config user.email "$default_user_email"
-    git config user.name "$default_user_name"
-    git push
+        #reset user config
+        git config user.email "$default_user_email"
+        git config user.name "$default_user_name"
+        git push
 
-    echo 1
-    #else
-    #    echo 0
-    #fi
+        echo 1
+    else
+        echo 0
+    fi
     )
 }
 
@@ -82,7 +82,6 @@ push_action(){
     is_initial=$(initialize_sync_on_repo_if_needed "$source_repo_folder" "$source_repo_name" "$source_subfolder_to_sync")
     is_initial=$(initialize_sync_on_repo_if_needed "$target_repo_folder" "$source_repo_name" "$target_subfolder_to_sync")
 
-    exit 0
     if [[ "$is_initial" -eq 1 ]]; then
         echo INITIAL SETUP COMPLETE
         return 0
