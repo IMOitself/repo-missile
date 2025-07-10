@@ -167,7 +167,9 @@ push_action(){
     )
 }
 
-
+echo ""
+echo "--- SIMULATIONS ---"
+echo ""
 
 echo ""
 echo simulates first time uploading the workflow file
