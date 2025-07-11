@@ -6,9 +6,12 @@ A fork of [github-action-push-to-another-repository](https://github.com/cpina/gi
 > which is a fork of [nkoppel's](https://github.com/nkoppel/push-files-to-another-repository) <br>
 > which is a fork of [cpina's](https://github.com/cpina/github-action-push-to-another-repository) 
 
+I ended up vibe coding this, so if u came asking me how it works, im sorry :D. <br>
+*trust me i did my best coding it myself for several times ;-;*
+
 ## TODO
-- [ ] refactor entrypoint.sh
-- [ ] make it not squash commits on push
+- [x] refactor entrypoint.sh
+- [x] make it not squash commits on push
 
 ## Installation 
 > [!IMPORTANT]
