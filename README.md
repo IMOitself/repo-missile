@@ -9,9 +9,9 @@ A fork of [github-action-push-to-another-repository](https://github.com/cpina/gi
 I ended up vibe coding this, so if u came asking me how it works, im sorry :D. <br>
 *trust me i did my best coding it myself for several times ;-;*
 
-## TODO
-- [x] refactor entrypoint.sh
-- [x] make it not squash commits on push
+## FEATURE
+- [x] does not squash commits on push
+- [ ] only for specified subfolder *(untested)*
 
 ## Installation 
 > [!IMPORTANT]
