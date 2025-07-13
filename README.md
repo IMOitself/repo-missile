@@ -4,10 +4,18 @@ A fork of [github-action-push-to-another-repository](https://github.com/cpina/gi
 > [!NOTE]
 > uses code from [danmindru's](https://github.com/danmindru/push-files-to-another-repository) <br>
 > which is a fork of [nkoppel's](https://github.com/nkoppel/push-files-to-another-repository) <br>
-> which is a fork of [cpina's](https://github.com/cpina/github-action-push-to-another-repository) 
+> which is a fork of [cpina's](https://github.com/cpina/github-action-push-to-another-repository)
+
+<br><br>
+
+> [!CAUTION]
+> the development of this project has been stopped. continuation will be done in [commit-catcher](https://github.com/IMOitself/commit-catcher). <br><br>
+> **REASON:** just like [AfterReadme](https://github.com/IMOitself/AfterReadme) it is not working as intended and has fundamental flaw in the system. i really did tried coming up with different ideas how to implement it but it lead me to burnout oof!<br>
 
 > [!WARNING]
-> there's no need to change `IMOitself/repo-missile@0.2` <br> at the code below. it is set to a stable release <br><br> do not change it to `IMOitself/repo-missile@master` <br> as it is currently unstable. <br><br> current development is happening on [experiment](https://github.com/IMOitself/repo-missile/tree/experiment) branch.
+> **this is a note if you really really really wanna try this** <br><br> there's no need to change `IMOitself/repo-missile@0.2` <br> at the code below. it is set to a stable release <br><br> do not change it to `IMOitself/repo-missile@master` <br> as it is currently unstable.
+
+<br>
 
 ## TODO
 - [ ] refactor entrypoint.sh
@@ -15,7 +23,7 @@ A fork of [github-action-push-to-another-repository](https://github.com/cpina/gi
 
 ## Installation 
 > [!IMPORTANT]
-> comming soon..<br><br>
+> sadly discontinued ;-;<br><br>
 > [*(outdated guide)*](https://github.com/danmindru/push-files-to-another-repository/blob/master/README.md)
 
 ## Example usage
